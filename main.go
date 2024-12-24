@@ -43,6 +43,7 @@ func ws_handler(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	http.HandleFunc("/", echo)
+	http.HandleFunc("/ws", ws_handler)
 
     fs := http.FileServer(http.Dir("./public/"))
     http.Handle("/public/", http.StripPrefix("/public", fs))
