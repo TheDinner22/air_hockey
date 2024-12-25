@@ -47,6 +47,7 @@ func main() {
 	http.HandleFunc("/", echo)
 	http.HandleFunc("/ws", ws_handler)
 
+    // file server
     fs := http.FileServer(http.Dir("./public/"))
     http.Handle("/public/", http.StripPrefix("/public", fs))
 

@@ -1,4 +1,5 @@
 var socket
+
 /**
 * @type {HTMLCanvasElement}
 */
@@ -9,7 +10,6 @@ var canvas
 var ctx
 
 document.addEventListener("DOMContentLoaded", (_) => {
-    console.log("hi")
     setup_canvas()
     // ws()
 });
@@ -34,20 +34,21 @@ function ws(){
 
 }
 
+function sendMessage(message) {
+    socket.send(message);
+}
+
 function setup_canvas (){
     const c = document.getElementById("my-canvas")
 
     // runtime code to make my lsp happy :(
+    // TODO remove this in prod??? idk why not
     if (c instanceof HTMLCanvasElement) {
         canvas = c
-
         ctx = canvas.getContext('2d')
     }
 
-    ctx.fillStyle = "blue";
+    ctx.fillStyle = "black";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 }
 
-function sendMessage(message) {
-    socket.send(message);
-}
