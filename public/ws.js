@@ -29,6 +29,11 @@ function sendMessage(message) {
 var canvas;
 var ctx;
 var game_state;
+var mouse_pos = [-1, -1];
+function get_mouse_pos(event) {
+    console.log(event.x, event.y);
+    mouse_pos = [event.x, event.y];
+}
 document.addEventListener("DOMContentLoaded", (_) => {
     setup_canvas();
     Player.radius = canvas.width / 10;

@@ -29,6 +29,12 @@ function sendMessage(message) {
 var canvas: HTMLCanvasElement
 var ctx: CanvasRenderingContext2D
 var game_state: GameState
+var mouse_pos: [number, number] = [-1, -1]
+
+function get_mouse_pos(event: MouseEvent) {
+    console.log(event.x, event.y)
+    mouse_pos = [event.x, event.y]
+}
 
 document.addEventListener("DOMContentLoaded", (_) => {
     setup_canvas()
