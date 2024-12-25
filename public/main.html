@@ -8,7 +8,7 @@
         <!-- TODO remove v=1.0 since caching is nice in prod -->
         <script src="ws.js?v=1.0"></script>
     </head>
-    <body>
+    <body hx-boost="true">
         <canvas onmousemove="get_mouse_pos(event)" id="my-canvas" width="200px" height="400px"></canvas>
     </body>
 </html>
