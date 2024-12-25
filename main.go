@@ -7,13 +7,17 @@ import (
 	"net/http"
 
     "github.com/TheDinner22/air_hockey/handlers"
+    // "github.com/TheDinner22/air_hockey/game"
+    // "github.com/google/uuid"
 )
 
 func main() {
-	http.HandleFunc("/", Echo)
-	http.HandleFunc("/ws", Ws_handler)
-	http.HandleFunc("/session/create", Session_create)
-	http.HandleFunc("/session/join", Session_join)
+    // pending_games := make(map[uuid.UUID]game.GameState)
+
+	http.HandleFunc("/", handlers.Echo)
+	http.HandleFunc("/ws", handlers.Ws_handler)
+	http.HandleFunc("/session/create", handlers.Session_create)
+	http.HandleFunc("/session/join", handlers.Session_join)
 
     // file server
     fs := http.FileServer(http.Dir("./public/"))
