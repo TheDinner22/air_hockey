@@ -23,7 +23,7 @@ func echo(w http.ResponseWriter, r *http.Request) {
 func ws_handler(w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		log.Fatal(err)
+        log.Println(err)
 		return
 	}
 
@@ -32,11 +32,13 @@ func ws_handler(w http.ResponseWriter, r *http.Request) {
 
 	msg_type, msg, err := conn.ReadMessage()
 	if err != nil {
-		log.Fatal(err)
+        log.Println(err)
+		return
 	}
 
 	if err := conn.WriteMessage(msg_type, msg); err != nil {
-		log.Fatal(err)
+        log.Println(err)
+		return
 	}
 
 }
