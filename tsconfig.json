@@ -1,0 +1,18 @@
+{
+    "compilerOptions": {
+        "noEmit": false,
+        "strict": true,
+        "target": "ESNext",
+        "outDir": "public/",
+        "lib": ["ESNext", "DOM", "DOM.Iterable"],
+        "allowJs": false,
+        "esModuleInterop": true,
+        "moduleResolution": "bundler",
+        "forceConsistentCasingInFileNames": true,
+        "useUnknownInCatchVariables": true,
+        "noImplicitOverride": true,
+        "verbatimModuleSyntax": true,
+        "baseUrl": "."
+    },
+    "include": ["./ts/*"]
+}

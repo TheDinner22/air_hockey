@@ -1,4 +1,3 @@
-"use strict";
 /* we will do web sockets later :P
 var socket
 
@@ -26,17 +25,25 @@ function sendMessage(message) {
     socket.send(message);
 }
 */
-var canvas;
-var ctx;
+
+var canvas: HTMLCanvasElement
+var ctx: CanvasRenderingContext2D
+
 document.addEventListener("DOMContentLoaded", (_) => {
-    setup_canvas();
-    init_game();
+    setup_canvas()
+
+    init_game()
+
     // ws()
 });
+
 function setup_canvas() {
-    canvas = document.getElementById("my-canvas");
-    ctx = canvas.getContext('2d');
+    canvas = document.getElementById("my-canvas") as HTMLCanvasElement
+    ctx = canvas.getContext('2d') as CanvasRenderingContext2D;
+
     ctx.fillStyle = "black";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 }
+
 function init_game() { }
+
