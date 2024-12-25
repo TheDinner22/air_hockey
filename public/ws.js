@@ -28,6 +28,7 @@ function sendMessage(message) {
 */
 var canvas;
 var ctx;
+var game_state;
 document.addEventListener("DOMContentLoaded", (_) => {
     setup_canvas();
     init_game();
@@ -39,4 +40,33 @@ function setup_canvas() {
     ctx.fillStyle = "black";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 }
-function init_game() { }
+class Player {
+    score;
+    name;
+    pos;
+    constructor(name) {
+        this.score = 0;
+        this.name = name;
+        this.pos = [-1, -1];
+    }
+}
+class GameState {
+    p1;
+    p2;
+    puck;
+    constructor(p1, p2) {
+        this.p1 = new Player(p1);
+        this.p2 = new Player(p2);
+        this.puck = [-1, -1];
+    }
+}
+function init_game() {
+    game_state = new GameState("joe", "ella");
+    // put puck at middle
+    ctx.beginPath();
+    ctx.fillStyle = "red";
+    ctx.arc(canvas.width / 2, canvas.height / 2, canvas.width / 15, 0, 2 * Math.PI);
+    ctx.fill();
+    // put p1 on bottom
+    // put p2 on top
+}

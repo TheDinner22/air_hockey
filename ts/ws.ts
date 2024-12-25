@@ -28,6 +28,7 @@ function sendMessage(message) {
 
 var canvas: HTMLCanvasElement
 var ctx: CanvasRenderingContext2D
+var game_state: GameState
 
 document.addEventListener("DOMContentLoaded", (_) => {
     setup_canvas()
@@ -45,5 +46,40 @@ function setup_canvas() {
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 }
 
-function init_game() { }
+class Player {
+    score: number
+    name: string
+    pos: [number, number]
+
+    constructor(name: string) {
+        this.score = 0
+        this.name = name
+        this.pos = [-1, -1]
+    }
+}
+
+class GameState {
+    p1: Player
+    p2: Player
+    puck: [number, number]
+
+    constructor(p1: string, p2: string) {
+        this.p1 = new Player(p1)
+        this.p2 = new Player(p2)
+        this.puck = [-1, -1]
+    }
+}
+
+function init_game() {
+    game_state = new GameState("joe", "ella")
+
+    // put puck at middle
+    ctx.beginPath();
+    ctx.fillStyle = "red";
+    ctx.arc(canvas.width / 2, canvas.height / 2, canvas.width / 15, 0, 2 * Math.PI);
+    ctx.fill();
+
+    // put p1 on bottom
+    // put p2 on top
+}
 
