@@ -5,14 +5,26 @@ import (
     "net/http"
     "fmt"
     "html"
+    "sync"
+
+    "github.com/TheDinner22/air_hockey/game"
 
 	"github.com/gorilla/websocket"
-    "github.com/TheDinner22/air_hockey/game"
+	"github.com/google/uuid"
 )
 
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
+}
+
+var waiting_games = make(map[uuid.UUID]game.GameState)
+var waiting_games_mutex sync.Mutex // the zero value is an unlocked mutex
+
+func GetUuid(w http.ResponseWriter, r *http.Request) {// TODO html templates are pretty cool...
+	id := uuid.New()
+    msg := "<span hx-on:htmx:load=\"ws_session_create()\" id=\"uuid\">" + id.String() + "</span>"
+	w.Write([]byte(msg))
 }
 
 func Echo(w http.ResponseWriter, r *http.Request) {
@@ -44,11 +56,21 @@ func Ws_handler(w http.ResponseWriter, r *http.Request) {
 
 func Session_create(w http.ResponseWriter, r *http.Request) {
     // we expect the request to look a certian way:
-    // - uuid in the query string, thats it
-    uuid := r.URL.Query().Get("uuid")
-    if uuid == "" {
+    // - uuid_str in the query string, thats it
+
+    // first we get the uuid string
+    uuid_str := r.URL.Query().Get("uuid")
+    if uuid_str == "" {
         w.WriteHeader(400)
         w.Write([]byte("invalid request: Name missing!"))
+        return
+    }
+
+    // then we attempt to parse it
+    uuid, err := uuid.Parse(uuid_str)
+    if err != nil {
+        w.WriteHeader(400)
+        w.Write([]byte("invalid request: malformed uuid string!"))
         return
     }
 
@@ -59,24 +81,23 @@ func Session_create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-    fmt.Println(uuid)
-
     // create game_state with 1 player (it'll be waiting to be setup)
     // TODO actually init this
     game_state := game.GameState{}
-
-    // for now, we just try and make the ws connection
+    game_state.Game_sizes = game.Sizes{Canvas_width: 200, Canvas_height: 400}
     game_state.P1_conn = conn
-    conn = nil // doesn't hurt to be safe
-    defer game_state.P1_conn.Close()
 
-    // block until we get some kinda message
-	_, msg, err := game_state.P1_conn.ReadMessage()
-	if err != nil {
-        log.Println(err)
-		return
-	}
-    log.Println(string(msg))
+    conn = nil // doesn't hurt to be safe
+
+    // if the super rare chance that this uuid already exists happens, crash
+    if _, found := waiting_games[uuid]; found {
+        panic("uuid already existed?!?!!?")
+    }
+
+    // store the incomplete game_state until someone joins and we can start playing
+    waiting_games_mutex.Lock()
+    waiting_games[uuid] = game_state
+    waiting_games_mutex.Unlock()
 }
 
 func Session_join(w http.ResponseWriter, r *http.Request) {}

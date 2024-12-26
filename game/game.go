@@ -6,8 +6,8 @@ import (
 )
 
 type Sizes struct {
-	canvas_width  int
-	canvas_height int
+	Canvas_width  int
+	Canvas_height int
 }
 
 type Point struct {
