@@ -1,7 +1,9 @@
 var socket: WebSocket
 
 function ws_session_create() {
-    console.log("hi")
+    if (socket != undefined && socket.OPEN) {
+        console.error("cannot create session")
+    }
 
     // now get that uu-id from the html returned
     const uuid_elem = document.getElementById("uuid")
@@ -17,7 +19,7 @@ function ws_session_create() {
 
     socket.onopen = function(_) {
         // Handle connection open
-        console.log("open")
+        console.log("created!")
     };
 
     socket.onmessage = function(event) {
@@ -29,11 +31,38 @@ function ws_session_create() {
         // Handle connection close
         console.log("close")
     };
+}
 
+function ws_session_join() {
+    if (socket != undefined && socket.OPEN) {
+        console.error("cannot join session")
+    }
+
+    // get uuid from text box
+    const text_input = document.getElementById("session-uuid") as HTMLInputElement
+    const uuid_to_join = text_input.value
+
+    const url = 'ws://localhost:8000/session/join?uuid=' + uuid_to_join
+    socket = new WebSocket(url);
+
+    socket.onopen = function(_) {
+        // Handle connection open
+        console.log("joined!")
+    };
+
+    socket.onmessage = function(event) {
+        // Handle received message
+        console.log(event.data)
+    };
+
+    socket.onclose = function(_) {
+        // Handle connection close
+        console.log("close")
+    };
 }
 
 function send_message(msg: string) {
-    if (!socket.OPEN) {
+    if (socket != undefined && !socket.OPEN) {
         return
     }
 

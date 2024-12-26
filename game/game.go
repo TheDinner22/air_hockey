@@ -74,3 +74,23 @@ type GameState struct {
 func NewGameState(p1 Player, p2 Player, puck Puck, game_sizes Sizes, p1_conn *websocket.Conn, p2_conn *websocket.Conn) GameState {
 	return GameState{p1, p2, puck, game_sizes, p1_conn, p2_conn}
 }
+
+// basic rules for the game
+//1. players can move their mouses, this moves their puck
+//2. a player's puck must stay on their half of the board
+//3. there is a Puck, it has a velocity and must have collision detection and handling
+//4. players can score by getting the puck to collide with a certain part of the oponents side of the board
+func Start_game(game_state GameState){
+    defer game_state.P1_conn.Close()
+    defer game_state.P2_conn.Close()
+
+    msg_type, msg, err := game_state.P1_conn.ReadMessage()
+    if err != nil {
+        return
+    }
+
+    err = game_state.P2_conn.WriteMessage(msg_type, msg)
+    if err != nil {
+        return
+    }
+}

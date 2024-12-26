@@ -100,4 +100,48 @@ func Session_create(w http.ResponseWriter, r *http.Request) {
     waiting_games_mutex.Unlock()
 }
 
-func Session_join(w http.ResponseWriter, r *http.Request) {}
+func Session_join(w http.ResponseWriter, r *http.Request) {
+    // we expect the request to look a certian way:
+    // - uuid_str in the query string, thats it
+
+    // first we get the uuid string
+    uuid_str := r.URL.Query().Get("uuid")
+    if uuid_str == "" {
+        w.WriteHeader(400)
+        w.Write([]byte("invalid request: Name missing!"))
+        return
+    }
+
+    // then we attempt to parse it
+    uuid, err := uuid.Parse(uuid_str)
+    if err != nil {
+        w.WriteHeader(400)
+        w.Write([]byte("invalid request: malformed uuid string!"))
+        return
+    }
+
+    // get/delete the game state
+    waiting_games_mutex.Lock()
+    game_state, found := waiting_games[uuid]
+    delete(waiting_games, uuid)
+    waiting_games_mutex.Unlock()
+
+    if !found {
+        w.WriteHeader(400)
+        w.Write([]byte("invalid request: that session doesn't exist!"))
+        return
+    }
+
+    // next we try and create a websocket connection
+	conn, err := upgrader.Upgrade(w, r, nil)
+	if err != nil {
+        log.Fatal(err) // TODO shouldn't be Fatal
+		return
+	}
+
+    // update game_state with now conn
+    game_state.P2_conn = conn
+
+    // start the game!
+    go game.Start_game(game_state)
+}

@@ -11,6 +11,9 @@
     </head>
     <body hx-boost="true">
         <canvas onmousemove="get_mouse_pos(event)" id="my-canvas" width="200px" height="400px"></canvas>
-        <button hx-get="/session/create_uuid" hx-swap="outerHTML" type="button" >create_session</button>
+        <label for="session-uuid">session to join</label>
+        <input id="session-uuid" type="text" name="session-uuid" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx">
+        <button hx-on:click="ws_session_join()" type="button" >join session</button>
+        <button hx-get="/session/create_uuid" hx-swap="outerHTML" type="button" >create session</button>
     </body>
 </html>
