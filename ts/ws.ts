@@ -1,8 +1,20 @@
-/* we will do web sockets later :P
-var socket
+var socket: WebSocket
 
-function ws(){
-    socket = new WebSocket('ws://localhost:8000/ws');
+function ws_session_create() {
+    console.log("hi")
+
+    // now get that uu-id from the html returned
+    const uuid_elem = document.getElementById("uuid")
+
+    if (uuid_elem == null) {
+        console.error("failed to get uuid! Was null")
+        return
+    }
+
+    const uuid_str = uuid_elem.innerText
+    const url = 'ws://localhost:8000/session/create?uuid=' + uuid_str
+    console.log(url)
+    socket = new WebSocket(url);
 
     socket.onopen = function(_) {
         // Handle connection open
@@ -21,6 +33,15 @@ function ws(){
 
 }
 
+function send_message(msg: string) {
+    if (!socket.OPEN) {
+        return
+    }
+
+    socket.send(msg)
+}
+
+/*
 function sendMessage(message) {
     socket.send(message);
 }

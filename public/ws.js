@@ -1,27 +1,37 @@
 "use strict";
-/* we will do web sockets later :P
-var socket
-
-function ws(){
-    socket = new WebSocket('ws://localhost:8000/ws');
-
-    socket.onopen = function(_) {
+var socket;
+function ws_session_create() {
+    console.log("hi");
+    // now get that uu-id from the html returned
+    const uuid_elem = document.getElementById("uuid");
+    if (uuid_elem == null) {
+        console.error("failed to get uuid! Was null");
+        return;
+    }
+    const uuid_str = uuid_elem.innerText;
+    const url = 'ws://localhost:8000/session/create?uuid=' + uuid_str;
+    console.log(url);
+    socket = new WebSocket(url);
+    socket.onopen = function (_) {
         // Handle connection open
-        console.log("open")
+        console.log("open");
     };
-
-    socket.onmessage = function(event) {
+    socket.onmessage = function (event) {
         // Handle received message
-        console.log(event.data)
+        console.log(event.data);
     };
-
-    socket.onclose = function(_) {
+    socket.onclose = function (_) {
         // Handle connection close
-        console.log("close")
+        console.log("close");
     };
-
 }
-
+function send_message(msg) {
+    if (!socket.OPEN) {
+        return;
+    }
+    socket.send(msg);
+}
+/*
 function sendMessage(message) {
     socket.send(message);
 }

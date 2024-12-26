@@ -44,9 +44,9 @@ func Ws_handler(w http.ResponseWriter, r *http.Request) {
 
 func Session_create(w http.ResponseWriter, r *http.Request) {
     // we expect the request to look a certian way:
-    // - name in the query string, thats it
-    name := r.URL.Query().Get("name")
-    if name == "" {
+    // - uuid in the query string, thats it
+    uuid := r.URL.Query().Get("uuid")
+    if uuid == "" {
         w.WriteHeader(400)
         w.Write([]byte("invalid request: Name missing!"))
         return
@@ -59,6 +59,8 @@ func Session_create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+    fmt.Println(uuid)
+
     // create game_state with 1 player (it'll be waiting to be setup)
     // TODO actually init this
     game_state := game.GameState{}
@@ -69,7 +71,7 @@ func Session_create(w http.ResponseWriter, r *http.Request) {
     defer game_state.P1_conn.Close()
 
     // block until we get some kinda message
-	_, msg, err := conn.ReadMessage()
+	_, msg, err := game_state.P1_conn.ReadMessage()
 	if err != nil {
         log.Println(err)
 		return
