@@ -13,7 +13,6 @@ function ws_session_create() {
 
     const uuid_str = uuid_elem.innerText
     const url = 'ws://localhost:8000/session/create?uuid=' + uuid_str
-    console.log(url)
     socket = new WebSocket(url);
 
     socket.onopen = function(_) {
