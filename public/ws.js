@@ -13,6 +13,7 @@ function ws_on_msg(e) {
     // for now just update the player locations TODO
     game_state.p1.move(raw_gs.P1.Pos.Center.X, raw_gs.P1.Pos.Center.Y);
     game_state.p2.move(raw_gs.P2.Pos.Center.X, raw_gs.P2.Pos.Center.Y);
+    game_state.puck = [raw_gs.Puck.Pos.Center.X, raw_gs.Puck.Pos.Center.Y];
     game_state.draw();
 }
 function ws_session_create() {

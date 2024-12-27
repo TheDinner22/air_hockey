@@ -4,6 +4,7 @@ import (
 	"math"
 	"strconv"
 	"strings"
+	"time"
 
 	"encoding/json"
 
@@ -55,27 +56,27 @@ type Player struct {
 }
 
 // new_pos of the form: "[x, y]"
-func (player *Player) update_pos(new_pos *string){
-    no_prefix := strings.TrimPrefix(*new_pos, "[")
-    no_postfix := strings.TrimSuffix(no_prefix, "]")
-    x_and_y := strings.Split(no_postfix, ",")
+func (player *Player) update_pos(new_pos *string) {
+	no_prefix := strings.TrimPrefix(*new_pos, "[")
+	no_postfix := strings.TrimSuffix(no_prefix, "]")
+	x_and_y := strings.Split(no_postfix, ",")
 
-    if len(x_and_y) != 2{
-        return
-    }
+	if len(x_and_y) != 2 {
+		return
+	}
 
-    // TODO err here? idk
-    x, err := strconv.Atoi(x_and_y[0])
-    if err != nil {
-        return
-    }
-    y, err := strconv.Atoi(x_and_y[1])
-    if err != nil {
-        return
-    }
+	// TODO err here? idk
+	x, err := strconv.Atoi(x_and_y[0])
+	if err != nil {
+		return
+	}
+	y, err := strconv.Atoi(x_and_y[1])
+	if err != nil {
+		return
+	}
 
-    player.Pos.Center.X = x
-    player.Pos.Center.Y = y
+	player.Pos.Center.X = x
+	player.Pos.Center.Y = y
 
 }
 
@@ -92,6 +93,11 @@ func NewPuck(pos Circle, velocity Point) Puck {
 	return Puck{pos, velocity}
 }
 
+func (puck *Puck) tick() {
+	puck.Pos.Center.X += puck.Velocity.X
+	puck.Pos.Center.Y += puck.Velocity.Y
+}
+
 type GameState struct {
 	P1         Player
 	P2         Player
@@ -106,15 +112,21 @@ func NewGameState(p1 Player, p2 Player, puck Puck, game_sizes Sizes, p1_conn *we
 }
 
 // I know it takes a ptr, I SWEAR i won't mutate it
-func (gs *GameState)send_state(){
-    gs_as_json, err := json.Marshal(gs)
-    if err != nil {
-        panic("gs could not be json!?!?!")
-    }
+func (gs *GameState) send_state() {
+	gs_as_json, err := json.Marshal(gs)
+	if err != nil {
+		panic("gs could not be json!?!?!")
+	}
 
-    gs.P1_conn.WriteMessage(websocket.TextMessage, gs_as_json)
-    gs.P2_conn.WriteMessage(websocket.TextMessage, gs_as_json)
+	gs.P1_conn.WriteMessage(websocket.TextMessage, gs_as_json)
+	gs.P2_conn.WriteMessage(websocket.TextMessage, gs_as_json)
 
+}
+
+func (gs *GameState) starting_pos() {
+	// center the puck
+	gs.Puck.Pos.Center.X = gs.Game_sizes.Canvas_width / 2
+	gs.Puck.Pos.Center.Y = gs.Game_sizes.Canvas_height / 2
 }
 
 // basic rules for the game
@@ -130,6 +142,9 @@ func Start_game(game_state GameState) {
 	defer game_state.P1_conn.Close()
 	defer game_state.P2_conn.Close()
 
+	game_state.starting_pos()
+    game_state.Puck.Velocity.Y = 1
+
 	// channels for reading
 	ch1 := make(chan *string)
 	ch2 := make(chan *string)
@@ -138,29 +153,32 @@ func Start_game(game_state GameState) {
 	go keep_reading(ch2, game_state.P2_conn)
 
 	for {
-        change := false
 		select {
 		case msg, ok := <-ch1:
-            if !ok {return}
-            game_state.P1.update_pos(msg)
-            change = true
+			if !ok {
+				return
+			}
+			game_state.P1.update_pos(msg)
 
 		default:
 		}
 
 		select {
 		case msg, ok := <-ch2:
-            if !ok {return}
-            game_state.P2.update_pos(msg)
-            change = true
+			if !ok {
+				return
+			}
+			game_state.P2.update_pos(msg)
 
 		default:
 		}
 
-        // send the game_state down
-        if change {
-            game_state.send_state()
-        }
+		game_state.Puck.tick()
+
+		// send the game_state down
+		game_state.send_state()
+
+		time.Sleep(time.Millisecond * 17)
 	}
 }
 
@@ -168,11 +186,11 @@ func keep_reading(ch chan *string, conn *websocket.Conn) {
 	for {
 		msg_type, raw_msg, err := conn.ReadMessage()
 		if err != nil {
-            close(ch)
+			close(ch)
 			return
 		}
 		if msg_type == websocket.BinaryMessage {
-            close(ch)
+			close(ch)
 			return
 		}
 
