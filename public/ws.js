@@ -1,8 +1,24 @@
 "use strict";
 var socket;
+function ws_on_open(_) {
+    // Handle connection open
+    console.log("created!");
+}
+function ws_on_close(_) {
+    // Handle connection close
+    console.log("close");
+}
+function ws_on_msg(e) {
+    const raw_gs = JSON.parse(e.data);
+    // for now just update the player locations TODO
+    game_state.p1.move(raw_gs.P1.Pos.Center.X, raw_gs.P1.Pos.Center.Y);
+    game_state.p2.move(raw_gs.P2.Pos.Center.X, raw_gs.P2.Pos.Center.Y);
+    game_state.draw();
+}
 function ws_session_create() {
     if (socket != undefined && socket.OPEN) {
         console.error("cannot create session");
+        return;
     }
     // now get that uu-id from the html returned
     const uuid_elem = document.getElementById("uuid");
@@ -13,40 +29,23 @@ function ws_session_create() {
     const uuid_str = uuid_elem.innerText;
     const url = 'ws://localhost:8000/session/create?uuid=' + uuid_str;
     socket = new WebSocket(url);
-    socket.onopen = function (_) {
-        // Handle connection open
-        console.log("created!");
-    };
-    socket.onmessage = function (event) {
-        // Handle received message
-        console.log(event.data);
-    };
-    socket.onclose = function (_) {
-        // Handle connection close
-        console.log("close");
-    };
+    socket.onopen = ws_on_open;
+    socket.onmessage = ws_on_msg;
+    socket.onclose = ws_on_close;
 }
 function ws_session_join() {
     if (socket != undefined && socket.OPEN) {
         console.error("cannot join session");
+        return;
     }
     // get uuid from text box
     const text_input = document.getElementById("session-uuid");
     const uuid_to_join = text_input.value;
     const url = 'ws://localhost:8000/session/join?uuid=' + uuid_to_join;
     socket = new WebSocket(url);
-    socket.onopen = function (_) {
-        // Handle connection open
-        console.log("joined!");
-    };
-    socket.onmessage = function (event) {
-        // Handle received message
-        console.log(event.data);
-    };
-    socket.onclose = function (_) {
-        // Handle connection close
-        console.log("close");
-    };
+    socket.onopen = ws_on_open;
+    socket.onmessage = ws_on_msg;
+    socket.onclose = ws_on_close;
 }
 function send_message(msg) {
     if (socket != undefined && !socket.OPEN) {
@@ -54,24 +53,20 @@ function send_message(msg) {
     }
     socket.send(msg);
 }
-/*
-function sendMessage(message) {
-    socket.send(message);
-}
-*/
 var canvas;
 var ctx;
 var game_state;
 var mouse_pos = [-1, -1];
 function get_mouse_pos(event) {
-    console.log(event.x, event.y);
     mouse_pos = [event.x, event.y];
+    if (socket != undefined && socket.OPEN) {
+        send_message(JSON.stringify(mouse_pos));
+    }
 }
 document.addEventListener("DOMContentLoaded", (_) => {
     setup_canvas();
     Player.radius = canvas.width / 10;
     init_game();
-    // ws()
 });
 function setup_canvas() {
     canvas = document.getElementById("my-canvas");

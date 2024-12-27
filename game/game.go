@@ -1,8 +1,13 @@
 package game
 
 import (
-	"github.com/gorilla/websocket"
 	"math"
+	"strconv"
+	"strings"
+
+	"encoding/json"
+
+	"github.com/gorilla/websocket"
 )
 
 type Sizes struct {
@@ -11,8 +16,8 @@ type Sizes struct {
 }
 
 type Point struct {
-	x int
-	y int
+	X int
+	Y int
 }
 
 func NewPoint(x, y int) Point {
@@ -20,8 +25,8 @@ func NewPoint(x, y int) Point {
 }
 
 type Circle struct {
-	center Point
-	radius int
+	Center Point
+	Radius int
 }
 
 func NewCircle(center Point, radius int) Circle {
@@ -29,11 +34,11 @@ func NewCircle(center Point, radius int) Circle {
 }
 
 func (c Circle) contains(other Circle) bool {
-	diff_x := other.center.x - c.center.x
-	diff_y := other.center.y - c.center.y
+	diff_x := other.Center.X - c.Center.X
+	diff_y := other.Center.Y - c.Center.Y
 	center_dist := math.Sqrt(float64(diff_x*diff_x) + float64(diff_y*diff_y))
 
-	longest_dist := c.radius + other.radius
+	longest_dist := c.Radius + other.Radius
 
 	// if the centers are longest_dist aparart (or further), the circles don't overlap
 	if float64(longest_dist) > center_dist {
@@ -44,9 +49,34 @@ func (c Circle) contains(other Circle) bool {
 }
 
 type Player struct {
-	name  string
-	score int
-	pos   Circle
+	Name  string
+	Score int
+	Pos   Circle
+}
+
+// new_pos of the form: "[x, y]"
+func (player *Player) update_pos(new_pos *string){
+    no_prefix := strings.TrimPrefix(*new_pos, "[")
+    no_postfix := strings.TrimSuffix(no_prefix, "]")
+    x_and_y := strings.Split(no_postfix, ",")
+
+    if len(x_and_y) != 2{
+        return
+    }
+
+    // TODO err here? idk
+    x, err := strconv.Atoi(x_and_y[0])
+    if err != nil {
+        return
+    }
+    y, err := strconv.Atoi(x_and_y[1])
+    if err != nil {
+        return
+    }
+
+    player.Pos.Center.X = x
+    player.Pos.Center.Y = y
+
 }
 
 func NewPlayer(name string, score int, pos Circle) Player {
@@ -54,8 +84,8 @@ func NewPlayer(name string, score int, pos Circle) Player {
 }
 
 type Puck struct {
-	pos      Circle
-	velocity Point // in this case point is more like a vector dx, dy not x, y
+	Pos      Circle
+	Velocity Point // in this case point is more like a vector dx, dy not x, y
 }
 
 func NewPuck(pos Circle, velocity Point) Puck {
@@ -75,22 +105,80 @@ func NewGameState(p1 Player, p2 Player, puck Puck, game_sizes Sizes, p1_conn *we
 	return GameState{p1, p2, puck, game_sizes, p1_conn, p2_conn}
 }
 
+// I know it takes a ptr, I SWEAR i won't mutate it
+func (gs *GameState)send_state(){
+    gs_as_json, err := json.Marshal(gs)
+    if err != nil {
+        panic("gs could not be json!?!?!")
+    }
+
+    gs.P1_conn.WriteMessage(websocket.TextMessage, gs_as_json)
+    gs.P2_conn.WriteMessage(websocket.TextMessage, gs_as_json)
+
+}
+
 // basic rules for the game
-//1. players can move their mouses, this moves their puck
-//2. a player's puck must stay on their half of the board
-//3. there is a Puck, it has a velocity and must have collision detection and handling
-//4. players can score by getting the puck to collide with a certain part of the oponents side of the board
-func Start_game(game_state GameState){
-    defer game_state.P1_conn.Close()
-    defer game_state.P2_conn.Close()
+// 1. players can move their mouses, this moves their puck
+// 2. a player's puck must stay on their half of the board
+// 3. there is a Puck, it has a velocity and must have collision detection and handling
+// 4. players can score by getting the puck to collide with a certain part of the oponents side of the board
+//
+// ws stuff:
+// 1. either websocket can send us msg's, we should update the gmae_state accordingly
+// 2. we send either websocket the game_state (or maybe the updated game state) at the same time
+func Start_game(game_state GameState) {
+	defer game_state.P1_conn.Close()
+	defer game_state.P2_conn.Close()
 
-    msg_type, msg, err := game_state.P1_conn.ReadMessage()
-    if err != nil {
-        return
-    }
+	// channels for reading
+	ch1 := make(chan *string)
+	ch2 := make(chan *string)
 
-    err = game_state.P2_conn.WriteMessage(msg_type, msg)
-    if err != nil {
-        return
-    }
+	go keep_reading(ch1, game_state.P1_conn)
+	go keep_reading(ch2, game_state.P2_conn)
+
+	for {
+        change := false
+		select {
+		case msg, ok := <-ch1:
+            if !ok {return}
+            game_state.P1.update_pos(msg)
+            change = true
+
+		default:
+		}
+
+		select {
+		case msg, ok := <-ch2:
+            if !ok {return}
+            game_state.P2.update_pos(msg)
+            change = true
+
+		default:
+		}
+
+        // send the game_state down
+        if change {
+            game_state.send_state()
+        }
+	}
+}
+
+func keep_reading(ch chan *string, conn *websocket.Conn) {
+	for {
+		msg_type, raw_msg, err := conn.ReadMessage()
+		if err != nil {
+            close(ch)
+			return
+		}
+		if msg_type == websocket.BinaryMessage {
+            close(ch)
+			return
+		}
+
+		// im told that this doesn't perform a copy...
+		msg := string(raw_msg)
+
+		ch <- &msg
+	}
 }
