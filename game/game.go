@@ -10,7 +10,7 @@ import (
 
 	"github.com/gorilla/websocket"
 
-    "github.com/TheDinner22/air_hockey/vectors"
+	"github.com/TheDinner22/air_hockey/vectors"
 )
 
 type Sizes struct {
@@ -112,25 +112,36 @@ func (gs *GameState) send_state() {
 }
 
 func (gs *GameState) starting_pos() {
-	// center the puck
 	gs.Puck.Pos.Center.X = gs.Game_sizes.Canvas_width / 2
 	gs.Puck.Pos.Center.Y = gs.Game_sizes.Canvas_height / 2
+    gs.Puck.Pos.Radius = gs.Game_sizes.Canvas_width / 15
+
+    // TODO do players too
 }
 
 // tick is the smallest increment in time, it's one frame
 // the puck should move by its velocity and all collsions/scoring should be checked for and handled
 func (gs *GameState) tick() {
-    // move the puck
+	// move the puck
 	gs.Puck.Pos.Center.X += gs.Puck.Velocity.X
 	gs.Puck.Pos.Center.Y += gs.Puck.Velocity.Y
 
-    // would pos+velocity cause a collsion with a wall?
-    new_puck_x := gs.Puck.Pos.Center.X + gs.Puck.Velocity.X
-    new_puck_y := gs.Puck.Pos.Center.Y + gs.Puck.Velocity.Y
+	// clamp maybe
+	gs.Puck.Pos.Center.X = min(max(gs.Puck.Pos.Center.X, 0), gs.Game_sizes.Canvas_width)
+	gs.Puck.Pos.Center.Y = min(max(gs.Puck.Pos.Center.Y, 0), gs.Game_sizes.Canvas_height)
 
-    // overlap with the roof
-    // TODO now here!!!
-    // does it collide with an edge?!?!?!? collide it then!?!!?!
+	// would pos+velocity cause a collsion with a wall?
+	puck_x := gs.Puck.Pos.Center.X
+	puck_y := gs.Puck.Pos.Center.Y
+	puck_radius := gs.Puck.Pos.Radius
+
+	if puck_x-puck_radius <= 0 || puck_x+puck_radius >= gs.Game_sizes.Canvas_width {
+		gs.Puck.Velocity.Collide_with_rigid(vectors.Y_axis())
+	}
+
+	if puck_y-puck_radius <= 0 || puck_y+puck_radius >= gs.Game_sizes.Canvas_height {
+		gs.Puck.Velocity.Collide_with_rigid(vectors.X_axis())
+	}
 }
 
 // basic rules for the game
@@ -146,14 +157,15 @@ func Start_game(game_state GameState) {
 	defer game_state.P1_conn.Close()
 	defer game_state.P2_conn.Close()
 
-    // game runs at 60 fps on the server 1/60 is an
-    // update every ~17 ms
-    // TODO: does this need to be 60 fps???
-    ticker := time.NewTicker(time.Millisecond * 17)
-    defer ticker.Stop()
+	// game runs at 60 fps on the server 1/60 is an
+	// update every ~17 ms
+	// TODO: does this need to be 60 fps???
+	ticker := time.NewTicker(time.Millisecond * 17)
+	defer ticker.Stop()
 
 	game_state.starting_pos()
-    game_state.Puck.Velocity.Y = 1
+	game_state.Puck.Velocity.Y = 0
+	game_state.Puck.Velocity.X = 1
 
 	// channels for reading
 	ch1 := make(chan *string)
@@ -184,10 +196,10 @@ func Start_game(game_state GameState) {
 		}
 
 		select {
-        case <-ticker.C:
-            // we only do 60 updates/second ??
-            game_state.tick()
-            game_state.send_state()
+		case <-ticker.C:
+			// we only do 60 updates/second ??
+			game_state.tick()
+			game_state.send_state()
 		default:
 		}
 	}
