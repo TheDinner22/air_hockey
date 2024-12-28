@@ -1,6 +1,7 @@
 package game
 
 import (
+	"fmt"
 	"math"
 	"strconv"
 	"strings"
@@ -142,6 +143,12 @@ func Start_game(game_state GameState) {
 	defer game_state.P1_conn.Close()
 	defer game_state.P2_conn.Close()
 
+    // game runs at 60 fps on the server 1/60 is an
+    // update every ~17 ms
+    // TODO: does this need to be 60 fps???
+    ticker := time.NewTicker(time.Millisecond * 17)
+    defer ticker.Stop()
+
 	game_state.starting_pos()
     game_state.Puck.Velocity.Y = 1
 
@@ -173,12 +180,14 @@ func Start_game(game_state GameState) {
 		default:
 		}
 
-		game_state.Puck.tick()
-
-		// send the game_state down
-		game_state.send_state()
-
-		time.Sleep(time.Millisecond * 17)
+		select {
+        case <-ticker.C:
+            // we only do 60 updates/second ??
+            game_state.Puck.tick()
+            game_state.send_state()
+            fmt.Println("sending!!")
+		default:
+		}
 	}
 }
 
