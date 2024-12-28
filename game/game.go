@@ -127,6 +127,10 @@ func (gs *GameState) tick() {
     // would pos+velocity cause a collsion with a wall?
     new_puck_x := gs.Puck.Pos.Center.X + gs.Puck.Velocity.X
     new_puck_y := gs.Puck.Pos.Center.Y + gs.Puck.Velocity.Y
+
+    // overlap with the roof
+    // TODO now here!!!
+    // does it collide with an edge?!?!?!? collide it then!?!!?!
 }
 
 // basic rules for the game
