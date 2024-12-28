@@ -1,7 +1,6 @@
 package game
 
 import (
-	"fmt"
 	"math"
 	"strconv"
 	"strings"
@@ -10,6 +9,8 @@ import (
 	"encoding/json"
 
 	"github.com/gorilla/websocket"
+
+    "github.com/TheDinner22/air_hockey/vectors"
 )
 
 type Sizes struct {
@@ -17,21 +18,12 @@ type Sizes struct {
 	Canvas_height int
 }
 
-type Point struct {
-	X int
-	Y int
-}
-
-func NewPoint(x, y int) Point {
-	return Point{x, y}
-}
-
 type Circle struct {
-	Center Point
+	Center vectors.Vec2
 	Radius int
 }
 
-func NewCircle(center Point, radius int) Circle {
+func NewCircle(center vectors.Vec2, radius int) Circle {
 	return Circle{center, radius}
 }
 
@@ -87,10 +79,10 @@ func NewPlayer(name string, score int, pos Circle) Player {
 
 type Puck struct {
 	Pos      Circle
-	Velocity Point // in this case point is more like a vector dx, dy not x, y
+	Velocity vectors.Vec2 // in this case point is more like a vector dx, dy not x, y
 }
 
-func NewPuck(pos Circle, velocity Point) Puck {
+func NewPuck(pos Circle, velocity vectors.Vec2) Puck {
 	return Puck{pos, velocity}
 }
 
@@ -128,8 +120,13 @@ func (gs *GameState) starting_pos() {
 // tick is the smallest increment in time, it's one frame
 // the puck should move by its velocity and all collsions/scoring should be checked for and handled
 func (gs *GameState) tick() {
+    // move the puck
 	gs.Puck.Pos.Center.X += gs.Puck.Velocity.X
 	gs.Puck.Pos.Center.Y += gs.Puck.Velocity.Y
+
+    // would pos+velocity cause a collsion with a wall?
+    new_puck_x := gs.Puck.Pos.Center.X + gs.Puck.Velocity.X
+    new_puck_y := gs.Puck.Pos.Center.Y + gs.Puck.Velocity.Y
 }
 
 // basic rules for the game
@@ -187,7 +184,6 @@ func Start_game(game_state GameState) {
             // we only do 60 updates/second ??
             game_state.tick()
             game_state.send_state()
-            fmt.Println("sending!!")
 		default:
 		}
 	}
