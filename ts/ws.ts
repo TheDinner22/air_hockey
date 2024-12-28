@@ -18,11 +18,11 @@ function ws_on_msg(e: MessageEvent<any>) {
     game_state.p2.move(raw_gs.P2.Pos.Center.X, raw_gs.P2.Pos.Center.Y)
     game_state.puck = [raw_gs.Puck.Pos.Center.X, raw_gs.Puck.Pos.Center.Y]
 
-    game_state.draw()
+    requestAnimationFrame(() => game_state.draw())
 }
 
 function ws_session_create() {
-    if (socket != undefined && socket.OPEN) {
+    if (socket != undefined && socket.readyState != socket.CLOSED) {
         console.error("cannot create session")
         return
     }
@@ -45,7 +45,7 @@ function ws_session_create() {
 }
 
 function ws_session_join() {
-    if (socket != undefined && socket.OPEN) {
+    if (socket != undefined && socket.readyState != socket.CLOSED) {
         console.error("cannot join session")
         return
     }
@@ -63,7 +63,8 @@ function ws_session_join() {
 }
 
 function send_message(msg: string) {
-    if (socket != undefined && !socket.OPEN) {
+    if (socket == undefined || socket.readyState != socket.OPEN) {
+        console.error("could not send message for some reason")
         return
     }
 
@@ -123,7 +124,7 @@ interface RawGameState {
 function get_mouse_pos(event: MouseEvent) {
     mouse_pos = [event.x, event.y]
 
-    if (socket != undefined && socket.OPEN) {
+    if (socket != undefined && socket.readyState == socket.OPEN) {
         send_message(JSON.stringify(mouse_pos))
     }
 }

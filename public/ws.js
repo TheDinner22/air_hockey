@@ -14,10 +14,10 @@ function ws_on_msg(e) {
     game_state.p1.move(raw_gs.P1.Pos.Center.X, raw_gs.P1.Pos.Center.Y);
     game_state.p2.move(raw_gs.P2.Pos.Center.X, raw_gs.P2.Pos.Center.Y);
     game_state.puck = [raw_gs.Puck.Pos.Center.X, raw_gs.Puck.Pos.Center.Y];
-    game_state.draw();
+    requestAnimationFrame(() => game_state.draw());
 }
 function ws_session_create() {
-    if (socket != undefined && socket.OPEN) {
+    if (socket != undefined && socket.readyState != socket.CLOSED) {
         console.error("cannot create session");
         return;
     }
@@ -35,7 +35,7 @@ function ws_session_create() {
     socket.onclose = ws_on_close;
 }
 function ws_session_join() {
-    if (socket != undefined && socket.OPEN) {
+    if (socket != undefined && socket.readyState != socket.CLOSED) {
         console.error("cannot join session");
         return;
     }
@@ -49,7 +49,8 @@ function ws_session_join() {
     socket.onclose = ws_on_close;
 }
 function send_message(msg) {
-    if (socket != undefined && !socket.OPEN) {
+    if (socket == undefined || socket.readyState != socket.OPEN) {
+        console.error("could not send message for some reason");
         return;
     }
     socket.send(msg);
@@ -60,7 +61,7 @@ var game_state;
 var mouse_pos = [-1, -1];
 function get_mouse_pos(event) {
     mouse_pos = [event.x, event.y];
-    if (socket != undefined && socket.OPEN) {
+    if (socket != undefined && socket.readyState == socket.OPEN) {
         send_message(JSON.stringify(mouse_pos));
     }
 }
