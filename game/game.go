@@ -94,11 +94,6 @@ func NewPuck(pos Circle, velocity Point) Puck {
 	return Puck{pos, velocity}
 }
 
-func (puck *Puck) tick() {
-	puck.Pos.Center.X += puck.Velocity.X
-	puck.Pos.Center.Y += puck.Velocity.Y
-}
-
 type GameState struct {
 	P1         Player
 	P2         Player
@@ -128,6 +123,13 @@ func (gs *GameState) starting_pos() {
 	// center the puck
 	gs.Puck.Pos.Center.X = gs.Game_sizes.Canvas_width / 2
 	gs.Puck.Pos.Center.Y = gs.Game_sizes.Canvas_height / 2
+}
+
+// tick is the smallest increment in time, it's one frame
+// the puck should move by its velocity and all collsions/scoring should be checked for and handled
+func (gs *GameState) tick() {
+	gs.Puck.Pos.Center.X += gs.Puck.Velocity.X
+	gs.Puck.Pos.Center.Y += gs.Puck.Velocity.Y
 }
 
 // basic rules for the game
@@ -183,7 +185,7 @@ func Start_game(game_state GameState) {
 		select {
         case <-ticker.C:
             // we only do 60 updates/second ??
-            game_state.Puck.tick()
+            game_state.tick()
             game_state.send_state()
             fmt.Println("sending!!")
 		default:
