@@ -4,6 +4,20 @@ import (
 	"math"
 )
 
+func X_axis() Vec2 {
+    return Vec2{
+        X: 1,
+        Y: 0,
+    }
+}
+
+func Y_axis() Vec2 {
+    return Vec2{
+        X: 0,
+        Y: 1,
+    }
+}
+
 // Vec2 could represent a point or some vector
 // Vec2 internally uses floats but only exposes ints so that 
 // its easy to use (we work on the scale of whole, discrete pixels)
@@ -48,8 +62,9 @@ func (v *Vec2) rotate(theta float64) {
 
 // self will collide with other, self will not lose any energy and other will not move
 // other is considered to have infinite mass, really the angle is what determines the collision
-func (self *Vec2) collide_with_rigid(other Vec2) {
+func (self *Vec2) Collide_with_rigid(other Vec2) {
     angle_of_incidence := self.angle_between(other)
     amount_to_rotate := math.Pi - 2*angle_of_incidence
     self.rotate(amount_to_rotate) // TODO should this have some kind of clockwise or not check??
+    self.scale(-1)
 }
