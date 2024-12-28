@@ -187,7 +187,8 @@ class GameState {
         // puck
         ctx.beginPath();
         ctx.fillStyle = "red";
-        ctx.arc(this.puck[0], this.puck[1], canvas.width / 15, 0, 2 * Math.PI);
+        const radius = canvas.width / 15
+        ctx.arc(this.puck[0], this.puck[1], radius, 0, 2 * Math.PI);
         ctx.fill();
 
         // p1
