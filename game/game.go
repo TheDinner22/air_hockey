@@ -68,8 +68,8 @@ func (player *Player) update_pos(new_pos *string) {
 		return
 	}
 
-	player.Pos.Center.X = x
-	player.Pos.Center.Y = y
+	player.Pos.Center.X = float64(x)
+	player.Pos.Center.Y = float64(y)
 
 }
 
@@ -112,8 +112,8 @@ func (gs *GameState) send_state() {
 }
 
 func (gs *GameState) starting_pos() {
-	gs.Puck.Pos.Center.X = gs.Game_sizes.Canvas_width / 2
-	gs.Puck.Pos.Center.Y = gs.Game_sizes.Canvas_height / 2
+	gs.Puck.Pos.Center.X = float64(gs.Game_sizes.Canvas_width / 2)
+	gs.Puck.Pos.Center.Y = float64(gs.Game_sizes.Canvas_height / 2)
     gs.Puck.Pos.Radius = gs.Game_sizes.Canvas_width / 15
 
     // TODO do players too
@@ -127,19 +127,19 @@ func (gs *GameState) tick() {
 	gs.Puck.Pos.Center.Y += gs.Puck.Velocity.Y
 
 	// clamp maybe
-	gs.Puck.Pos.Center.X = min(max(gs.Puck.Pos.Center.X, 0), gs.Game_sizes.Canvas_width)
-	gs.Puck.Pos.Center.Y = min(max(gs.Puck.Pos.Center.Y, 0), gs.Game_sizes.Canvas_height)
+	gs.Puck.Pos.Center.X = min(max(gs.Puck.Pos.Center.X, 0), float64(gs.Game_sizes.Canvas_width))
+	gs.Puck.Pos.Center.Y = min(max(gs.Puck.Pos.Center.Y, 0), float64(gs.Game_sizes.Canvas_height))
 
 	// would pos+velocity cause a collsion with a wall?
 	puck_x := gs.Puck.Pos.Center.X
 	puck_y := gs.Puck.Pos.Center.Y
-	puck_radius := gs.Puck.Pos.Radius
+	puck_radius := float64(gs.Puck.Pos.Radius)
 
-	if puck_x-puck_radius <= 0 || puck_x+puck_radius >= gs.Game_sizes.Canvas_width {
+	if puck_x-puck_radius <= 0 || puck_x+puck_radius >= float64(gs.Game_sizes.Canvas_width) {
 		gs.Puck.Velocity.Collide_with_rigid(vectors.Y_axis())
 	}
 
-	if puck_y-puck_radius <= 0 || puck_y+puck_radius >= gs.Game_sizes.Canvas_height {
+	if puck_y-puck_radius <= 0 || puck_y+puck_radius >= float64(gs.Game_sizes.Canvas_height) {
 		gs.Puck.Velocity.Collide_with_rigid(vectors.X_axis())
 	}
 }
@@ -164,7 +164,7 @@ func Start_game(game_state GameState) {
 	defer ticker.Stop()
 
 	game_state.starting_pos()
-	game_state.Puck.Velocity.Y = 0
+	game_state.Puck.Velocity.Y = 2
 	game_state.Puck.Velocity.X = 1
 
 	// channels for reading

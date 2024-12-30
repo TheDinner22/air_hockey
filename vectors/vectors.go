@@ -5,66 +5,86 @@ import (
 )
 
 func X_axis() Vec2 {
-    return Vec2{
-        X: 1,
-        Y: 0,
-    }
+	return Vec2{
+		X: 1,
+		Y: 0,
+	}
 }
 
 func Y_axis() Vec2 {
-    return Vec2{
-        X: 0,
-        Y: 1,
-    }
+	return Vec2{
+		X: 0,
+		Y: 1,
+	}
 }
 
 // Vec2 could represent a point or some vector
-// Vec2 internally uses floats but only exposes ints so that 
+// Vec2 internally uses floats but only exposes ints so that
 // its easy to use (we work on the scale of whole, discrete pixels)
 type Vec2 struct {
-	X int
-	Y int
+	// X and Y only exist for json marshalling and should never
+	// be written to or read from, their values aren't reliable
+	X, Y float64
 }
 
-func NewVec2(x, y int) Vec2 {
-	return Vec2{x, y}
+func NewVec2(x, y float64) Vec2 {
+	return Vec2{X: x, Y: y}
 }
 
 func (v Vec2) mag() float64 {
 	return math.Sqrt(float64(v.X*v.X) + float64(v.Y*v.Y))
 }
 
-func (self Vec2) dot(other Vec2) int {
+func (self Vec2) dot(other Vec2) float64 {
 	return self.X*other.X + self.Y*other.Y
 }
 
-func (self Vec2) angle_between(other Vec2) float64 {
-	var cos_theta float64 = float64(self.dot(other)) / (self.mag() * other.mag())
-	return math.Acos(cos_theta)
+func (v Vec2) norm() Vec2 {
+	return Vec2{
+		X: v.Y,
+		Y: -v.X,
+	}
 }
 
-func (v *Vec2) scale(num int) {
+func (v Vec2) unit_norm() Vec2 {
+	norm := v.norm()
+	norm.scale(v.mag())
+	return norm
+}
+
+func (v *Vec2) scale(num float64) {
 	v.X *= num
 	v.Y *= num
 }
 
-// theta is in radians where
-// (+) direction is counter-clockwise
-// (-) direction is clockwise
-func (v *Vec2) rotate(theta float64) {
-	mag := v.mag()
-	new_angle := math.Atan2(float64(v.Y), float64(v.X)) + theta
+func (v Vec2) with_scale(num float64) Vec2 {
+	return Vec2{
+		X: v.X * num,
+		Y: v.Y * num,
+	}
+}
 
-	// convert from polar to cartesian
-	v.Y = int(math.Sin(new_angle) * mag)
-	v.X = int(math.Cos(new_angle) * mag)
+func (v Vec2) with_difference(other Vec2) Vec2 {
+	return Vec2{
+		X: v.X - other.X,
+		Y: v.Y - other.Y,
+	}
+}
+
+func sum(a Vec2, b Vec2) Vec2{
+    return Vec2{
+        X: a.X + b.X,
+        Y: a.Y + b.Y,
+    }
 }
 
 // self will collide with other, self will not lose any energy and other will not move
 // other is considered to have infinite mass, really the angle is what determines the collision
 func (self *Vec2) Collide_with_rigid(other Vec2) {
-    angle_of_incidence := self.angle_between(other)
-    amount_to_rotate := math.Pi - 2*angle_of_incidence
-    self.rotate(amount_to_rotate) // TODO should this have some kind of clockwise or not check??
-    self.scale(-1)
+	unit_norm := other.unit_norm()
+
+	lhs := unit_norm.with_scale(-1 * self.dot(unit_norm))
+	rhs := self.with_difference(unit_norm.with_scale(self.dot(unit_norm)))
+
+    *self = sum(lhs, rhs)
 }
