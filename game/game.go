@@ -1,7 +1,6 @@
 package game
 
 import (
-	"math"
 	"strconv"
 	"strings"
 	"time"
@@ -18,34 +17,10 @@ type Sizes struct {
 	Canvas_height int
 }
 
-type Circle struct {
-	Center vectors.Vec2
-	Radius int
-}
-
-func NewCircle(center vectors.Vec2, radius int) Circle {
-	return Circle{center, radius}
-}
-
-func (c Circle) contains(other Circle) bool {
-	diff_x := other.Center.X - c.Center.X
-	diff_y := other.Center.Y - c.Center.Y
-	center_dist := math.Sqrt(float64(diff_x*diff_x) + float64(diff_y*diff_y))
-
-	longest_dist := c.Radius + other.Radius
-
-	// if the centers are longest_dist aparart (or further), the circles don't overlap
-	if float64(longest_dist) > center_dist {
-		return true
-	} else {
-		return false
-	}
-}
-
 type Player struct {
 	Name  string
 	Score int
-	Pos   Circle
+	Pos   vectors.Circle
 }
 
 // new_pos of the form: "[x, y]"
@@ -73,16 +48,16 @@ func (player *Player) update_pos(new_pos *string) {
 
 }
 
-func NewPlayer(name string, score int, pos Circle) Player {
+func NewPlayer(name string, score int, pos vectors.Circle) Player {
 	return Player{name, score, pos}
 }
 
 type Puck struct {
-	Pos      Circle
+	Pos      vectors.Circle
 	Velocity vectors.Vec2 // in this case point is more like a vector dx, dy not x, y
 }
 
-func NewPuck(pos Circle, velocity vectors.Vec2) Puck {
+func NewPuck(pos vectors.Circle, velocity vectors.Vec2) Puck {
 	return Puck{pos, velocity}
 }
 
@@ -114,9 +89,15 @@ func (gs *GameState) send_state() {
 func (gs *GameState) starting_pos() {
 	gs.Puck.Pos.Center.X = float64(gs.Game_sizes.Canvas_width / 2)
 	gs.Puck.Pos.Center.Y = float64(gs.Game_sizes.Canvas_height / 2)
-    gs.Puck.Pos.Radius = gs.Game_sizes.Canvas_width / 15
+	gs.Puck.Pos.Radius = gs.Game_sizes.Canvas_width / 15
 
-    // TODO do players too
+    gs.P1.Pos.Radius = gs.Game_sizes.Canvas_width / 10
+    gs.P1.Pos.Center.X = float64(gs.Game_sizes.Canvas_width / 2)
+    // TODO add Y
+
+    gs.P2.Pos.Radius = gs.Game_sizes.Canvas_width / 10
+    gs.P2.Pos.Center.X = float64(gs.Game_sizes.Canvas_width / 2)
+    // TODO add Y
 }
 
 // tick is the smallest increment in time, it's one frame
@@ -130,7 +111,7 @@ func (gs *GameState) tick() {
 	gs.Puck.Pos.Center.X = min(max(gs.Puck.Pos.Center.X, 0), float64(gs.Game_sizes.Canvas_width))
 	gs.Puck.Pos.Center.Y = min(max(gs.Puck.Pos.Center.Y, 0), float64(gs.Game_sizes.Canvas_height))
 
-	// would pos+velocity cause a collsion with a wall?
+	// puck collsions with a wall?
 	puck_x := gs.Puck.Pos.Center.X
 	puck_y := gs.Puck.Pos.Center.Y
 	puck_radius := float64(gs.Puck.Pos.Radius)
@@ -141,6 +122,16 @@ func (gs *GameState) tick() {
 
 	if puck_y-puck_radius <= 0 || puck_y+puck_radius >= float64(gs.Game_sizes.Canvas_height) {
 		gs.Puck.Velocity.Collide_with_rigid(vectors.X_axis())
+	}
+
+	// puck collsions with P1?
+	if gs.P1.Pos.Contains(gs.Puck.Pos) {
+        puck_as_wall := gs.Puck.Pos.Center.With_difference(gs.P1.Pos.Center).Unit_norm()
+		gs.Puck.Pos.Center.Collide_with_rigid(puck_as_wall)
+	}
+
+	// puck collsions with P2?
+	if gs.P2.Pos.Contains(gs.Puck.Pos) {
 	}
 }
 
