@@ -48,11 +48,11 @@ func (v Vec2) Norm() Vec2 {
 
 func (v Vec2) Unit_norm() Vec2 {
 	norm := v.Norm()
-	norm.scale(1/v.mag())
+	norm.Scale(1/v.mag())
 	return norm
 }
 
-func (v *Vec2) scale(num float64) {
+func (v *Vec2) Scale(num float64) {
 	v.X *= num
 	v.Y *= num
 }
@@ -71,10 +71,15 @@ func (v Vec2) With_difference(other Vec2) Vec2 {
 	}
 }
 
-func sum(a Vec2, b Vec2) Vec2{
+func (self *Vec2) Sum(other Vec2){
+    self.X += other.X
+    self.Y += other.Y
+}
+
+func (self Vec2) With_sum(other Vec2) Vec2{
     return Vec2{
-        X: a.X + b.X,
-        Y: a.Y + b.Y,
+        X: self.X + other.X,
+        Y: self.Y + other.Y,
     }
 }
 
@@ -86,7 +91,7 @@ func (self *Vec2) Collide_with_rigid(other Vec2) {
 	lhs := Unit_norm.with_scale(-1 * self.dot(Unit_norm))
 	rhs := self.With_difference(Unit_norm.with_scale(self.dot(Unit_norm)))
 
-    *self = sum(lhs, rhs)
+    *self = lhs.With_sum(rhs)
 }
 
 type Circle struct {
