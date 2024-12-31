@@ -21,6 +21,7 @@ type Player struct {
 	Name  string
 	Score int
 	Pos   vectors.Circle
+	vel   vectors.Vec2
 }
 
 // new_pos of the form: "[x, y]"
@@ -43,13 +44,18 @@ func (player *Player) update_pos(new_pos *string) {
 		return
 	}
 
+	// update velocity TODO you can cheat and make this very big by moving mouse off screen
+	player.vel.X = float64(x) - player.Pos.Center.X
+	player.vel.Y = float64(y) - player.Pos.Center.Y
+
+	// update pos
 	player.Pos.Center.X = float64(x)
 	player.Pos.Center.Y = float64(y)
 
 }
 
 func NewPlayer(name string, score int, pos vectors.Circle) Player {
-	return Player{name, score, pos}
+	return Player{Name: name, Score: score, Pos: pos}
 }
 
 type Puck struct {
@@ -91,25 +97,25 @@ func (gs *GameState) starting_pos() {
 	gs.Puck.Pos.Center.Y = float64(gs.Game_sizes.Canvas_height / 2)
 	gs.Puck.Pos.Radius = gs.Game_sizes.Canvas_width / 15
 
-    gs.P1.Pos.Radius = gs.Game_sizes.Canvas_width / 10
-    gs.P1.Pos.Center.X = float64(gs.Game_sizes.Canvas_width / 2)
-    // TODO add Y
+	gs.P1.Pos.Radius = gs.Game_sizes.Canvas_width / 10
+	gs.P1.Pos.Center.X = float64(gs.Game_sizes.Canvas_width / 2)
+	// TODO add Y
 
-    gs.P2.Pos.Radius = gs.Game_sizes.Canvas_width / 10
-    gs.P2.Pos.Center.X = float64(gs.Game_sizes.Canvas_width / 2)
-    // TODO add Y
+	gs.P2.Pos.Radius = gs.Game_sizes.Canvas_width / 10
+	gs.P2.Pos.Center.X = float64(gs.Game_sizes.Canvas_width / 2)
+	// TODO add Y
 }
 
 // tick is the smallest increment in time, it's one frame
 // the puck should move by its velocity and all collsions/scoring should be checked for and handled
 func (gs *GameState) tick() {
 	// move the puck
-	gs.Puck.Pos.Center.X += gs.Puck.Velocity.X
-	gs.Puck.Pos.Center.Y += gs.Puck.Velocity.Y
+	gs.Puck.Pos.Center.Sum(gs.Puck.Velocity)
+	gs.Puck.Velocity.Scale(0.97)
 
 	// clamp maybe
-	gs.Puck.Pos.Center.X = min(max(gs.Puck.Pos.Center.X, 0), float64(gs.Game_sizes.Canvas_width))
-	gs.Puck.Pos.Center.Y = min(max(gs.Puck.Pos.Center.Y, 0), float64(gs.Game_sizes.Canvas_height))
+	gs.Puck.Pos.Center.X = min(max(gs.Puck.Pos.Center.X, float64(gs.Puck.Pos.Radius)), float64(gs.Game_sizes.Canvas_width-gs.Puck.Pos.Radius))
+	gs.Puck.Pos.Center.Y = min(max(gs.Puck.Pos.Center.Y, float64(gs.Puck.Pos.Radius)), float64(gs.Game_sizes.Canvas_height-gs.Puck.Pos.Radius))
 
 	// puck collsions with a wall?
 	puck_x := gs.Puck.Pos.Center.X
@@ -126,8 +132,13 @@ func (gs *GameState) tick() {
 
 	// puck collsions with P1?
 	if gs.P1.Pos.Contains(gs.Puck.Pos) {
-        paddle_as_wall := gs.P1.Pos.Center.With_difference(gs.Puck.Pos.Center).Norm()
-        gs.Puck.Velocity.Collide_with_rigid(paddle_as_wall)
+		if gs.P1.vel.X == 0 && gs.P1.vel.Y == 0 {
+			paddle_as_wall := gs.P1.Pos.Center.With_difference(gs.Puck.Pos.Center).Norm()
+			gs.Puck.Velocity.Collide_with_rigid(paddle_as_wall)
+		} else {
+			gs.Puck.Velocity.Sum(gs.P1.vel)
+			gs.Puck.Velocity.Scale(0.7)
+		}
 	}
 
 	// puck collsions with P2?
