@@ -94,6 +94,19 @@ func (self *Vec2) Collide_with_rigid(other Vec2) {
     *self = lhs.With_sum(rhs)
 }
 
+// note that this method assumes that every shape involved is a circle
+func (self *Vec2) Collide_with_moving_rigid(wall Vec2, wall_vel Vec2) {
+    // relative velocity is magic!!
+    self.X -= wall_vel.X
+    self.Y -= wall_vel.Y
+
+    // perform collision as if it were with a stationary wall
+    self.Collide_with_rigid(wall)
+
+    self.X += wall_vel.X
+    self.Y += wall_vel.Y
+}
+
 type Circle struct {
 	Center Vec2
 	Radius int

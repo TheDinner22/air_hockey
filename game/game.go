@@ -132,13 +132,8 @@ func (gs *GameState) tick() {
 
 	// puck collsions with P1?
 	if gs.P1.Pos.Contains(gs.Puck.Pos) {
-		if gs.P1.vel.X == 0 && gs.P1.vel.Y == 0 {
-			paddle_as_wall := gs.P1.Pos.Center.With_difference(gs.Puck.Pos.Center).Norm()
-			gs.Puck.Velocity.Collide_with_rigid(paddle_as_wall)
-		} else {
-			gs.Puck.Velocity.Sum(gs.P1.vel)
-			gs.Puck.Velocity.Scale(0.7)
-		}
+        paddle_as_wall := gs.P1.Pos.Center.With_difference(gs.Puck.Pos.Center).Norm()
+        gs.Puck.Velocity.Collide_with_moving_rigid(paddle_as_wall, gs.P1.vel)
 	}
 
 	// puck collsions with P2?
