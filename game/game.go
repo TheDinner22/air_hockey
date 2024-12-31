@@ -115,7 +115,7 @@ func (gs *GameState) tick() {
 
 	// clamp maybe
 	gs.Puck.Pos.Center.X = min(max(gs.Puck.Pos.Center.X, float64(gs.Puck.Pos.Radius)), float64(gs.Game_sizes.Canvas_width-gs.Puck.Pos.Radius))
-    gs.Puck.Pos.Center.Y = min(max(gs.Puck.Pos.Center.Y, float64(gs.Puck.Pos.Radius)), float64(gs.Game_sizes.Canvas_height-gs.Puck.Pos.Radius))
+	gs.Puck.Pos.Center.Y = min(max(gs.Puck.Pos.Center.Y, float64(gs.Puck.Pos.Radius)), float64(gs.Game_sizes.Canvas_height-gs.Puck.Pos.Radius))
 
 	// puck collsions with a wall?
 	puck_x := gs.Puck.Pos.Center.X
