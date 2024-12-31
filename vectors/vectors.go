@@ -39,8 +39,7 @@ func (self Vec2) dot(other Vec2) float64 {
 	return self.X*other.X + self.Y*other.Y
 }
 
-// NOT UNIT LENGTH
-func (v Vec2) norm() Vec2 {
+func (v Vec2) Norm() Vec2 {
 	return Vec2{
 		X: v.Y,
 		Y: -v.X,
@@ -48,8 +47,8 @@ func (v Vec2) norm() Vec2 {
 }
 
 func (v Vec2) Unit_norm() Vec2 {
-	norm := v.norm()
-	norm.scale(v.mag())
+	norm := v.Norm()
+	norm.scale(1/v.mag())
 	return norm
 }
 
@@ -82,10 +81,10 @@ func sum(a Vec2, b Vec2) Vec2{
 // self will collide with other, self will not lose any energy and other will not move
 // other is considered to have infinite mass, really the angle is what determines the collision
 func (self *Vec2) Collide_with_rigid(other Vec2) {
-	unit_norm := other.Unit_norm()
+	Unit_norm := other.Unit_norm()
 
-	lhs := unit_norm.with_scale(-1 * self.dot(unit_norm))
-	rhs := self.With_difference(unit_norm.with_scale(self.dot(unit_norm)))
+	lhs := Unit_norm.with_scale(-1 * self.dot(Unit_norm))
+	rhs := self.With_difference(Unit_norm.with_scale(self.dot(Unit_norm)))
 
     *self = sum(lhs, rhs)
 }

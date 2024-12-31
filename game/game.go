@@ -126,8 +126,8 @@ func (gs *GameState) tick() {
 
 	// puck collsions with P1?
 	if gs.P1.Pos.Contains(gs.Puck.Pos) {
-        puck_as_wall := gs.Puck.Pos.Center.With_difference(gs.P1.Pos.Center).Unit_norm()
-		gs.Puck.Pos.Center.Collide_with_rigid(puck_as_wall)
+        paddle_as_wall := gs.P1.Pos.Center.With_difference(gs.Puck.Pos.Center).Norm()
+        gs.Puck.Velocity.Collide_with_rigid(paddle_as_wall)
 	}
 
 	// puck collsions with P2?
