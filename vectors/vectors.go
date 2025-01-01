@@ -130,3 +130,17 @@ func (c Circle) Contains(other Circle) bool {
 		return false
 	}
 }
+
+func(self *Circle) Move_out_of(other Circle){
+    if !other.Contains(*self){
+        return
+    }
+
+    min_acceptable_dist := self.Radius + other.Radius
+    actual_dist := self.Center.With_difference(other.Center).mag()
+
+    direction_to_move := self.Center.With_difference(other.Center).with_scale(1/actual_dist)
+    direction_to_move.Scale(float64(min_acceptable_dist)-actual_dist)
+
+    self.Center.Sum(direction_to_move)
+}

@@ -1,5 +1,8 @@
 package game
 
+// TODO the players velocity should be reset somehow
+// it's sorta impossible for a player to have v=0 rn...
+
 import (
 	"strconv"
 	"strings"
@@ -132,12 +135,22 @@ func (gs *GameState) tick() {
 
 	// puck collsions with P1?
 	if gs.P1.Pos.Contains(gs.Puck.Pos) {
+        // perform collision
         paddle_as_wall := gs.P1.Pos.Center.With_difference(gs.Puck.Pos.Center).Norm()
         gs.Puck.Velocity.Collide_with_moving_rigid(paddle_as_wall, gs.P1.vel)
+
+        // puck CANNOT get stuck in paddle
+        gs.Puck.Pos.Move_out_of(gs.P1.Pos)
 	}
 
 	// puck collsions with P2?
 	if gs.P2.Pos.Contains(gs.Puck.Pos) {
+        // perform collision
+        paddle_as_wall := gs.P2.Pos.Center.With_difference(gs.Puck.Pos.Center).Norm()
+        gs.Puck.Velocity.Collide_with_moving_rigid(paddle_as_wall, gs.P2.vel)
+
+        // puck CANNOT get stuck in paddle
+        gs.Puck.Pos.Move_out_of(gs.P2.Pos)
 	}
 }
 
