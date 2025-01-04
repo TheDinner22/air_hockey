@@ -3,6 +3,7 @@ package handlers
 import (
 	"fmt"
 	"html"
+	"html/template"
 	"log"
 	"net/http"
 	"strings"
@@ -23,9 +24,8 @@ var waiting_games = make(map[uuid.UUID]game.GameState)
 var waiting_games_mutex sync.Mutex // the zero value is an unlocked mutex
 
 func GetUuid(w http.ResponseWriter, r *http.Request) { // TODO html templates are pretty cool...
-	id := uuid.New()
-	msg := "<span hx-on:htmx:load=\"ws_session_create()\" id=\"uuid\">" + id.String() + "</span>"
-	w.Write([]byte(msg))
+	tmpl := template.Must(template.New("uuid_container").Parse("<span hx-on:htmx:load=\"ws_session_create()\" id=\"uuid\"> {{.}} </span>"))
+    tmpl.Execute(w, uuid.New())
 }
 
 func Echo(w http.ResponseWriter, r *http.Request) {
@@ -115,7 +115,7 @@ func Session_join(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-    uuid_str = strings.TrimSpace(uuid_str)
+	uuid_str = strings.TrimSpace(uuid_str)
 
 	// then we attempt to parse it
 	uuid, err := uuid.Parse(uuid_str)

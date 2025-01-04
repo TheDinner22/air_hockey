@@ -15,7 +15,7 @@ func main() {
 
 	http.HandleFunc("/", handlers.Echo)
 	http.HandleFunc("/ws", handlers.Ws_handler)
-	http.HandleFunc("/session/create", handlers.Session_create) //handlers.Session_create)
+	http.HandleFunc("/session/create", handlers.Session_create)
 	http.HandleFunc("/session/create_uuid", handlers.GetUuid)
 	http.HandleFunc("/session/join", handlers.Session_join)
 
