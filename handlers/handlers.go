@@ -1,8 +1,6 @@
 package handlers
 
 import (
-	"fmt"
-	"html"
 	"html/template"
 	"log"
 	"net/http"
@@ -26,10 +24,6 @@ var waiting_games_mutex sync.Mutex // the zero value is an unlocked mutex
 func GetUuid(w http.ResponseWriter, r *http.Request) { // TODO html templates are pretty cool...
 	tmpl := template.Must(template.New("uuid_container").Parse("<span hx-on:htmx:load=\"ws_session_create()\" id=\"uuid\"> {{.}} </span>"))
     tmpl.Execute(w, uuid.New())
-}
-
-func Echo(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Hello, %q", html.EscapeString(r.URL.Path))
 }
 
 func Ws_handler(w http.ResponseWriter, r *http.Request) {

@@ -13,7 +13,9 @@ import (
 func main() {
 	// pending_games := make(map[uuid.UUID]game.GameState)
 
-	http.HandleFunc("/", handlers.Echo)
+    // get index.html from the file server
+	http.Handle("/", http.RedirectHandler("/public/index.html", http.StatusSeeOther))
+
 	http.HandleFunc("/ws", handlers.Ws_handler)
 	http.HandleFunc("/session/create", handlers.Session_create)
 	http.HandleFunc("/session/create_uuid", handlers.GetUuid)
